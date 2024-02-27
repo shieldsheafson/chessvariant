@@ -1,0 +1,40 @@
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.9.22"
+    id 'java'
+    id 'application'
+}
+
+application {
+    mainClass = 'ChessUI/src/main/java/Driver'
+}
+
+jar {
+    archiveBaseName = 'gs-gradle'
+    archiveVersion =  '0.1.0'
+    
+}
+
+dependencies {
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDirs 'src/main/resources'
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.withType(Copy).all {
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+}
