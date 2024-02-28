@@ -2,6 +2,14 @@ package ChessUI.src.main.kotlin
 
 class Pawn(color: Char, x: Int, y: Int, board: Board, wasPawn: Boolean = false) : Piece(color, x, y, board, wasPawn) {
 
+  init {
+    if (color == 'w' && y != 6) {
+      hasMoved = true
+    } else if (color == 'b' && y != 1) {
+      hasMoved = true
+    }
+  }
+
   override fun possibleMoves(): Set<Coord> {
     val moves = mutableSetOf<Coord>()
 
