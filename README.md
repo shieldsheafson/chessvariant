@@ -1,4 +1,4 @@
-#Basic Chess GUI
+# Basic Chess GUI
 
 This project aims to create a GUI in which to play chess that closely mimics the style of Lichess.
 
