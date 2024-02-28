@@ -25,8 +25,18 @@ internal class BasicPiece(color: Char, x: Int, y: Int, board: Board, wasPawn: Bo
 internal class TestPiece {
 
   @Test
-  fun testReturnIllegalMoves() {
+  fun testGetCoord() {
+    val board = Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", "KQkq", "-", 8)
+    for (i in 0 until 7) {
+      for (j in 0 until 7) {
+        if (board.getPiece(Coord(i, j)) != null)
+        assertEquals(Coord(i, j), board.getPiece(Coord(i, j))?.getCoord())
+      }
+    }
+  }
 
+  @Test
+  fun testReturnIllegalMoves() {
   }
 
   @Test
