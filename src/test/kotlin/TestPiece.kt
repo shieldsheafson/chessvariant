@@ -13,7 +13,7 @@ import ChessUI.src.main.kotlin.Bishop
 import ChessUI.src.main.kotlin.Knight
 import ChessUI.src.main.kotlin.Pawn
 
-internal class BasicPiece(color: Char, x: Int, y: Int, board: Board, wasPawn: Boolean = false) : Piece(color, x, y, board, wasPawn) {
+internal class BasicPiece(color: Char, x: Int = 0, y: Int = 0, board: Board, wasPawn: Boolean = false) : Piece(color, x, y, board, wasPawn) {
   override fun possibleMoves(): Set<Coord> {
     return setOf<Coord>()
   }
@@ -37,6 +37,20 @@ internal class TestPiece {
 
   @Test
   fun testReturnIllegalMoves() {
+
+    // test out of bounds
+    val board1 = Board("k7/8/8/8/8/8/8/K7", "", "-", 8) // have to include a king, otherwise board throws an error
+    val testPiece1 = BasicPiece('w', board = board1)
+    val moves1 = setOf(Coord(0, 0), Coord(-1, 0), Coord(0, -1), Coord(-1, -1), Coord(4, 4), Coord(7, 7), Coord(7, 8), Coord(8, 7), Coord(8, 8))
+    val expected1 = setOf(Coord(-1, 0), Coord(0, -1), Coord(-1, -1), Coord(7, 8), Coord(8, 7), Coord(8, 8)) // all out of bounds
+    assertEquals(expected1, testPiece1.returnIllegalMoves(moves1))
+
+    // test same color
+    val board2 = Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", "KQkq", "-", 8)
+    val testPiece2 = BasicPiece('b', board = board2)
+    val moves2 = setOf(Coord(0, 0), Coord(1, 1), Coord(7, 7), Coord(6, 6), Coord(4, 4), Coord(5, 5))
+    val expected2 = setOf(Coord(0, 0), Coord(1, 1,)) // both black pieces
+    assertEquals(expected2, testPiece2.returnIllegalMoves(moves2))
   }
 
   @Test
