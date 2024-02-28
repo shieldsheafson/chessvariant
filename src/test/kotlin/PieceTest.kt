@@ -22,7 +22,7 @@ internal class BasicPiece(color: Char, x: Int = 0, y: Int = 0, board: Board, was
   }
 }
 
-internal class TestPiece {
+internal class PieceTest {
 
   @Test
   fun testGetCoord() {
