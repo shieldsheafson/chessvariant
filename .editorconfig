@@ -1,0 +1,4 @@
+[*.{kt,kts}]
+ktlint_code_style = ktlint_official
+indent_size = 2
+indent_style = space

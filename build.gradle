@@ -2,10 +2,11 @@ plugins {
     id "org.jetbrains.kotlin.jvm" version "1.9.22"
     id 'java'
     id 'application'
+    id "org.jlleitschuh.gradle.ktlint" version "10.0.0"
 }
 
 application {
-    mainClass = 'ChessUI/src/main/java/Driver'
+    mainClass = 'chessui/src/main/kotlin/DriverKt'
 }
 
 jar {
@@ -14,13 +15,47 @@ jar {
     
 }
 
+allprojects {
+    apply plugin: "org.jlleitschuh.gradle.ktlint"
+}
+
 dependencies {
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    
+    // https://mvnrepository.com/artifact/org.apache.xmlgraphics/batik-swing
+    implementation 'org.apache.xmlgraphics:batik-swing:1.17'
+
 }
 
 repositories {
     mavenCentral()
+}
+
+
+// work around I found online to get KtLint working with gradle
+afterEvaluate {
+    [
+        "processResources",
+        "ktlintMainSourceSetFormat",
+        "runKtlintFormatOverMainSourceSet",
+        "ktlintTestSourceSetFormat",
+        "runKtlintFormatOverTestSourceSet",
+        "compileKotlin",
+        "ktlintKotlinScriptFormat",
+        "runKtlintFormatOverKotlinScripts",
+        "runKtlintCheckOverMainSourceSet",
+        "runKtlintCheckOverTestSourceSet"
+    ].forEach { name ->
+        tasks.named(name).configure {
+            if ("runKtlintFormatOverKotlinScripts" != name) {
+                dependsOn("runKtlintFormatOverKotlinScripts")
+            }
+            if (project.parent != null && project.parent?.name != rootProject.name) {
+                dependsOn(":${project.parent?.name}:runKtlintFormatOverKotlinScripts")
+            }
+        }
+    }
 }
 
 sourceSets {

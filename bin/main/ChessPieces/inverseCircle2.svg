@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="45" height="45" viewBox="0, 0, 45, 45">
+
+  <path d="M 0 0 L 0 10 A 25 25 0 0 1 10 0 z"
+        fill="rgb(134, 151, 110)"/>
+  <path d="M 45 0 L 45 10 A 25 25 0 0 0 35 0 z"
+        fill="rgb(134, 151, 110)"/>
+  <path d="M 45 45 L 45 35 A 25 25 0 0 1 35 45 z"
+        fill="rgb(134, 151, 110)"/>
+  <path d="M 0 45 L 0 35 A 25 25 0 0 0 10 45 z"
+        fill="rgb(134, 151, 110)"/>
+  
+
+</svg>
