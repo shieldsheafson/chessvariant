@@ -95,7 +95,7 @@ class ChessUI(val game: Game) : JFrame() {
             previouslySelectedPossibleMoves = selectedSquarePossibleMoves
             selectedSquareNum = null
             selectedSquarePossibleMoves = setOf<Int>()
-          } else if (currentBoardPos[squareNum].isWhite == game.currentPlayer) {
+          } else if (currentBoardPos[squareNum].color == game.currentPlayer) {
             selectedSquareNum = squareNum
             selectedSquarePossibleMoves = game.getPossibleMoves(squareNum)
           } else {
@@ -234,14 +234,18 @@ class ChessUI(val game: Game) : JFrame() {
         }
       }
     }
-    for (i in game.board.getPieceLocations()) {
-      squares[i].setBackground(Color(173, 192, 222))
+
+    if (game.inCheck()) {
+      squares[game.board.getKingLocation(game.currentPlayer)].setBackground(RED)
     }
-    for (i in game.attacks[BLACK]!!) {
-      squares[i].setBackground(Color(240, 146, 163))
-    }
-    for (i in game.getPinnedPieces(game.board.getKingLocation(WHITE))) {
-      squares[i].setBackground(Color(115, 6, 25))
-    }
+    // for (i in game.board.getPieceLocations()) {
+    //   squares[i].setBackground(Color(173, 192, 222))
+    // }
+    // for (i in game.attacks[BLACK]!!) {
+    //   squares[i].setBackground(Color(240, 146, 163))
+    // }
+    // for (i in game.getPinnedPieces(game.board.getKingLocation(WHITE))) {
+    //   squares[i].setBackground(Color(115, 6, 25))
+    // }
   }
 }
