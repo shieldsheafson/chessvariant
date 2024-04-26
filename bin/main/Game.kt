@@ -4,6 +4,7 @@ import kotlin.math.abs
 
 class Game(initial: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
   var currentPlayer: Boolean = initial.split(" ")[1] == "w"
+    private set
   private var castlingRights: String = initial.split(" ")[2]
   private var enPassantTarget: Int = enPassantTargetStringToInt(initial.split(" ")[3])
   private var fullMoves: Int = initial.split(" ")[4].toInt()
@@ -12,6 +13,7 @@ class Game(initial: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq
   val board = Board(initial.split(" ")[0])
 
   val attacks = mapOf(WHITE to mutableListOf<Int>(), BLACK to mutableListOf<Int>())
+  val possibleMoves = mapOf(WHITE to mutableListOf<Int>(), BLACK to mutableListOf<Int>())
   val movesThatBlockCheck = mutableMapOf(WHITE to List<Int>(TOTALSQUARES) { it }, BLACK to List<Int>(TOTALSQUARES) { it })
 
   init {
@@ -68,19 +70,10 @@ class Game(initial: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq
         possibleMoves.clear()
       }
 
-      // first move
-      if (square == piece.startingSquare && board[
-        square +
-          piece.moves.elementAt(
-              0,
-            ),
-      ].isEmpty && board[square + piece.moves.elementAt(0) * 2].isEmpty
-      ) {
-        possibleMoves += square + piece.moves.elementAt(0) * 2
-      }
-
-      // attacks and en passant
       if (piece.color == WHITE) {
+        if (board.getRow(square) == board.startingWhitePawnRow && board[square + UP].isEmpty && board[square + UP + UP].isEmpty) {
+          possibleMoves += square + UP + UP
+        }
         if ((board[square + UPRIGHT].color == BLACK || square + UPRIGHT == enPassantTarget) && board.getCol(square) != 7) {
           possibleMoves += square + UPRIGHT
         }
@@ -88,6 +81,9 @@ class Game(initial: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq
           possibleMoves += square + UPLEFT
         }
       } else {
+        if (board.getRow(square) == board.startingBlackPawnRow && board[square + DOWN].isEmpty && board[square + DOWN + DOWN].isEmpty) {
+          possibleMoves += square + DOWN + DOWN
+        }
         if ((board[square + DOWNRIGHT].color == WHITE || square + DOWNRIGHT == enPassantTarget) && board.getCol(square) != 7) {
           possibleMoves += square + DOWNRIGHT
         }
@@ -281,11 +277,33 @@ class Game(initial: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq
     return pinnedPieces
   }
 
-  fun inCheck(): Boolean {
-    if (currentPlayer) {
+  fun inCheck(color: Boolean): Boolean {
+    if (color == WHITE) {
       return board.getKingLocation(WHITE) in attacks[BLACK]!!
     } else {
       return board.getKingLocation(BLACK) in attacks[WHITE]!!
+    }
+  }
+
+  fun hasMoves(color: Boolean): Boolean {
+    return false
+  }
+
+  fun endOfGame(): Boolean {
+    return hasMoves(WHITE) && hasMoves(BLACK)
+  }
+
+  fun winner(): Boolean? {
+    // true for white
+    // false for black
+    // null for draw
+
+    return if (inCheck(WHITE)) {
+      BLACK
+    } else if (inCheck(BLACK)) {
+      WHITE
+    } else {
+      null
     }
   }
 

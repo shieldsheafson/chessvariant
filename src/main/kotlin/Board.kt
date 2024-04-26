@@ -7,6 +7,9 @@ class Board(initialPos: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR") 
   private val board = Array<Piece>(TOTALSQUARES) { emptyPiece }
   private val pieceLocations = mutableSetOf<Int>()
   private val kingLocations = mutableMapOf(WHITE to -1, BLACK to -1)
+  
+  val startingWhitePawnRow = 6
+  val startingBlackPawnRow = 1
 
   init {
     var i = 0
