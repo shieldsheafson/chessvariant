@@ -1,6 +1,6 @@
 package chessui.src.main.kotlin
 
-const val SQUARESPERSIDE = 8
+const val SQUARESPERSIDE = 7
 const val TOTALSQUARES = SQUARESPERSIDE * SQUARESPERSIDE
 
 const val UP = -1 * SQUARESPERSIDE

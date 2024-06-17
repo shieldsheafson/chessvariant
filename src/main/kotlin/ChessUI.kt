@@ -16,7 +16,7 @@ import javax.swing.JFrame
 
 class ChessUI(val game: Game) : JFrame() {
   companion object {
-    private const val SQUARESPERSIDE = 8
+    private const val SQUARESPERSIDE = 7
     private const val INITFRAMEWIDTH = 750
     private const val FRAMETITLEBARHEIGHT = 28
 
@@ -79,7 +79,7 @@ class ChessUI(val game: Game) : JFrame() {
         override fun mousePressed(e: MouseEvent) {}
 
         override fun mouseReleased(e: MouseEvent) {
-          val squareNum = e.getY() / squareSize * 8 + e.getX() / squareSize
+          val squareNum = e.getY() / squareSize * 7 + e.getX() / squareSize
 
           if (squareNum > 63 || squareNum < 0) {
             return
@@ -137,7 +137,7 @@ class ChessUI(val game: Game) : JFrame() {
   }
 
   private fun squareIsWhite(squareNum: Int): Boolean {
-    return squareNum % 2 - squareNum / 8 % 2 == 0
+    return squareNum % 2 == 0
   }
 
   private fun highlightWithInverseCircle(squareNum: Int) {
@@ -182,7 +182,7 @@ class ChessUI(val game: Game) : JFrame() {
     // who couldn't figure out how to make layout mangers do what he wanted
     for (i in 0 until SQUARESPERSIDE) {
       for (j in 0 until SQUARESPERSIDE) {
-        val currentSquareNum = j * 8 + i
+        val currentSquareNum = j * 7 + i
         val square = squares[currentSquareNum]
 
         // add piece image to GUI

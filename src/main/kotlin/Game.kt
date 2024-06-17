@@ -2,7 +2,7 @@ package chessui.src.main.kotlin
 
 import kotlin.math.abs
 
-class Game(initial: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
+class Game(initial: String = "3kb2/7/7/7/7/7/3K3 w KQkq - 0 1") {
   var currentPlayer: Boolean = initial.split(" ")[1] == "w"
     private set
   private var castlingRights: String = initial.split(" ")[2]
@@ -94,18 +94,6 @@ class Game(initial: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq
     }
 
     if (piece.isKing) {
-      if ('Q' in castlingRights && board[59].isEmpty && board[58].isEmpty && board[57].isEmpty && listOf(59, 58, 57).intersect(attacks[!pieceColor]!!) == setOf<Int>()) {
-        possibleMoves += 58
-      }
-      if ('K' in castlingRights && board[61].isEmpty && board[62].isEmpty && listOf(61, 62).intersect(attacks[!pieceColor]!!) == setOf<Int>()) {
-        possibleMoves += 62
-      }
-      if ('q' in castlingRights && board[1].isEmpty && board[2].isEmpty && board[3].isEmpty && listOf(1, 2, 3).intersect(attacks[!pieceColor]!!) == setOf<Int>()) {
-        possibleMoves += 2
-      }
-      if ('k' in castlingRights && board[5].isEmpty && board[5].isEmpty && listOf(5, 6).intersect(attacks[!pieceColor]!!) == setOf<Int>()) {
-        possibleMoves += 6
-      }
 
       for (direction in DIRECTIONS) {
 
@@ -115,7 +103,7 @@ class Game(initial: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq
           possibleMoves -= square + -1 * direction
         }
       }
-      return possibleMoves - attacks[!pieceColor]!!
+      return possibleMoves - attacks[!pieceColor]!! - List<Int>(24) { it * 2 + 1 }
     }
     return possibleMoves.intersect(movesThatBlockCheck[pieceColor]!!)
   }
@@ -196,29 +184,18 @@ class Game(initial: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq
       enPassantTarget = -1
     }
 
-    if (piece.isKing) {
-      var rookFrom = 0
-      var rookTo = 0
-      if (from - to == -2) {
-        rookFrom = from + 3
-        rookTo = from + 1
-      } else if (from - to == 2) {
-        rookFrom = from - 4
-        rookTo = from - 1
-      }
-
-      movePiece(rookFrom, rookTo)
-      currentPlayer = !currentPlayer
-    }
-
+    val oldPossibleMoves = getPossibleMoves(from)
     val oldAttacks = getAttacks(from, piece)
     val newAttacks = getAttacks(to, piece)
 
+    oldPossibleMoves.forEach { possibleMoves[currentPlayer]!! -= it }
     oldAttacks.forEach { attacks[currentPlayer]!! -= it }
+
     attacks[currentPlayer]!! += newAttacks
 
     if (!board[to].isEmpty) {
       getAttacks(to, board[to]).forEach { attacks[!currentPlayer]!! -= it }
+      getPossibleMoves(to).forEach { possibleMoves[!currentPlayer]!! -= it }
     }
 
     if (board.getKingLocation(!currentPlayer) in newAttacks) {
@@ -285,19 +262,15 @@ class Game(initial: String = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq
     }
   }
 
-  fun hasMoves(color: Boolean): Boolean {
-    return false
+  fun hasNoMoves(color: Boolean): Boolean {
+    return possibleMoves[color]!!.isEmpty()
   }
 
   fun endOfGame(): Boolean {
-    return hasMoves(WHITE) && hasMoves(BLACK)
+    return hasNoMoves(WHITE) || hasNoMoves(BLACK)
   }
 
   fun winner(): Boolean? {
-    // true for white
-    // false for black
-    // null for draw
-
     return if (inCheck(WHITE)) {
       BLACK
     } else if (inCheck(BLACK)) {
