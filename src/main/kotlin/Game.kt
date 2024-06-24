@@ -2,13 +2,15 @@ package chessui.src.main.kotlin
 
 import kotlin.math.abs
 
-class Game(initial: String = "3kb2/7/7/7/7/7/3K3 w KQkq - 0 1") {
+class Game(initial: String = "3kb2/7/7/7/7/7/2BK3 w KQkq - 0 1") {
   var currentPlayer: Boolean = initial.split(" ")[1] == "w"
     private set
   private var castlingRights: String = initial.split(" ")[2]
   private var enPassantTarget: Int = enPassantTargetStringToInt(initial.split(" ")[3])
   private var fullMoves: Int = initial.split(" ")[4].toInt()
   private var halfMoves: Int = initial.split(" ")[5].toInt()
+
+  val rules = mutableListOf<Rule>()
 
   val board = Board(initial.split(" ")[0])
 
@@ -39,7 +41,7 @@ class Game(initial: String = "3kb2/7/7/7/7/7/3K3 w KQkq - 0 1") {
     }
 
     val moves = piece.moves.toMutableSet<Int>()
-    val possibleMoves = mutableSetOf<Int>()
+    var possibleMoves = mutableSetOf<Int>()
     val movesToRemove = mutableSetOf<Int>()
 
     var i = 1
@@ -94,7 +96,6 @@ class Game(initial: String = "3kb2/7/7/7/7/7/3K3 w KQkq - 0 1") {
     }
 
     if (piece.isKing) {
-
       for (direction in DIRECTIONS) {
 
         val pieceLocations = board.getPieceLocationsInDirection(board.getKingLocation(pieceColor), direction)
@@ -103,9 +104,19 @@ class Game(initial: String = "3kb2/7/7/7/7/7/3K3 w KQkq - 0 1") {
           possibleMoves -= square + -1 * direction
         }
       }
-      return possibleMoves - attacks[!pieceColor]!! - List<Int>(24) { it * 2 + 1 }
     }
-    return possibleMoves.intersect(movesThatBlockCheck[pieceColor]!!)
+
+    for (rule in rules) {
+      if (rule.modifiesGetPossibleMoves) {
+        rule.getPossibleMovesModifer(piece, possibleMoves, board.getFEN())
+      }
+    }
+    
+    return if (piece.isKing) {
+      possibleMoves - attacks[!pieceColor]!!
+    } else {
+      possibleMoves.intersect(movesThatBlockCheck[pieceColor]!!)
+    }
   }
 
   fun getAttacks(square: Int, piece: Piece): Set<Int> {
@@ -184,11 +195,9 @@ class Game(initial: String = "3kb2/7/7/7/7/7/3K3 w KQkq - 0 1") {
       enPassantTarget = -1
     }
 
-    val oldPossibleMoves = getPossibleMoves(from)
     val oldAttacks = getAttacks(from, piece)
     val newAttacks = getAttacks(to, piece)
 
-    oldPossibleMoves.forEach { possibleMoves[currentPlayer]!! -= it }
     oldAttacks.forEach { attacks[currentPlayer]!! -= it }
 
     attacks[currentPlayer]!! += newAttacks

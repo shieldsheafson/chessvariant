@@ -6,17 +6,13 @@ import org.apache.batik.anim.dom.SVGOMDocument
 import org.apache.batik.swing.JSVGCanvas
 import org.apache.batik.util.XMLResourceDescriptor
 import java.awt.Color
-import java.awt.event.ComponentAdapter
-import java.awt.event.ComponentEvent
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import java.io.IOException
 import javax.swing.JComponent
-import javax.swing.JFrame
 
-class ChessUI(val game: Game) : JFrame() {
+class ChessUI(val game: Game) : JComponent() {
   companion object {
-    private const val SQUARESPERSIDE = 7
     private const val INITFRAMEWIDTH = 750
     private const val FRAMETITLEBARHEIGHT = 28
 
@@ -34,9 +30,9 @@ class ChessUI(val game: Game) : JFrame() {
     private val HIGHLIGHTCOLORTWOCIRCLE = object {}.javaClass.getResource("/$IMAGEDIR/circle2.svg").file.toString()
   }
 
-  private var frameWidth = INITFRAMEWIDTH
-  private var frameHeight = INITFRAMEWIDTH + FRAMETITLEBARHEIGHT
-  private var squareSize = INITFRAMEWIDTH / SQUARESPERSIDE
+  private var frameWidth = INITFRAMEWIDTH / 2
+  private var frameHeight = (INITFRAMEWIDTH + FRAMETITLEBARHEIGHT) / 2
+  private var squareSize = (INITFRAMEWIDTH / SQUARESPERSIDE) / 2
 
   private var currentBoardPos = game.board
 
@@ -48,21 +44,6 @@ class ChessUI(val game: Game) : JFrame() {
   private val squares = Array<JSVGCanvas>(SQUARESPERSIDE * SQUARESPERSIDE) { JSVGCanvas() }
 
   init {
-
-    // auto adjust to square on resize
-    this.addComponentListener(
-      object : ComponentAdapter() {
-        override fun componentResized(componentEvent: ComponentEvent) {
-          if (frameWidth != getContentPane().getWidth() || frameHeight != getContentPane().getHeight()) {
-            frameWidth = Math.min(getContentPane().getWidth(), getContentPane().getHeight())
-            frameHeight = frameWidth + FRAMETITLEBARHEIGHT
-            squareSize = frameWidth / SQUARESPERSIDE
-            setSize(frameWidth, frameHeight)
-            updateUI()
-          }
-        }
-      },
-    )
 
     // click stuff
     val getClicks = object : JComponent() {}
@@ -79,14 +60,14 @@ class ChessUI(val game: Game) : JFrame() {
         override fun mousePressed(e: MouseEvent) {}
 
         override fun mouseReleased(e: MouseEvent) {
-          val squareNum = e.getY() / squareSize * 7 + e.getX() / squareSize
+          val squareNum = e.getY() / squareSize * SQUARESPERSIDE + e.getX() / squareSize
 
-          if (squareNum > 63 || squareNum < 0) {
+          if (squareNum > SQUARESPERSIDE * SQUARESPERSIDE - 1 || squareNum < 0) {
             return
           }
           if (currentBoardPos == game.board && selectedSquareNum == squareNum) {
             // purely so you can't spam click one square and cause the ui to glitch out
-            // the good solution would be to optimize updateUI
+            // the good solution would be to optimize updateChessUI
             // but thats hard so I'll do it later
             return
           } else if (squareNum in selectedSquarePossibleMoves) {
@@ -103,19 +84,20 @@ class ChessUI(val game: Game) : JFrame() {
             selectedSquarePossibleMoves = setOf<Int>()
           }
 
-          updateUI()
+          updateChessUI()
         }
       },
     )
 
-    updateUI()
+    updateChessUI()
+  }
 
-    // all the misc bits
-    setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE)
-    setTitle("Chess")
-    pack()
-    setVisible(true)
+  public fun adjustSize(newWidth: Int, newHeight: Int) {
+    frameWidth = Math.min(newWidth, newHeight)
+    frameHeight = frameWidth + FRAMETITLEBARHEIGHT
+    squareSize = frameWidth / SQUARESPERSIDE
     setSize(frameWidth, frameHeight)
+    updateChessUI()
   }
 
   private fun fenToFileName(fenChar: Char): String {
@@ -175,7 +157,7 @@ class ChessUI(val game: Game) : JFrame() {
     }
   }
 
-  private fun updateUI() {
+  private fun updateChessUI() {
     currentBoardPos = game.board
 
     // did it with absolute positioning cause I am a silly little guy
