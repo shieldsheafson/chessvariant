@@ -23,7 +23,6 @@ class MainUI(val game: Game) : JFrame() {
         override val modifiesMovePiece = true
         override fun getPossibleMovesModifer(piece: Piece, currentPossibleMoves: MutableSet<Int>, currentFEN: String) {
           currentPossibleMoves += 0
-          return
         }
       }
     )

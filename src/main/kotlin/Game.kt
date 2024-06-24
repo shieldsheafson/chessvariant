@@ -111,7 +111,7 @@ class Game(initial: String = "3kb2/7/7/7/7/7/2BK3 w KQkq - 0 1") {
         rule.getPossibleMovesModifer(piece, possibleMoves, board.getFEN())
       }
     }
-    
+
     return if (piece.isKing) {
       possibleMoves - attacks[!pieceColor]!!
     } else {
