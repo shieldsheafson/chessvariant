@@ -1,4 +1,4 @@
-package chessui.src.main.kotlin
+package chessnt.src.main.kotlin
 
 class Piece(val fenChar: Char = ' ', val startingSquare: Int = -1) {
   val isEmpty = fenChar == ' '

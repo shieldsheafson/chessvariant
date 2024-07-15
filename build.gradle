@@ -6,7 +6,7 @@ plugins {
 }
 
 application {
-    mainClass = 'chessui/src/main/kotlin/DriverKt'
+    mainClass = 'chessnt/src/main/kotlin/DriverKt'
 }
 
 jar {

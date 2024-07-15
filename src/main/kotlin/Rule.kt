@@ -1,4 +1,4 @@
-package chessui.src.main.kotlin
+package chessnt.src.main.kotlin
 
 abstract class Rule() {
   abstract val modifiesGetPossibleMoves: Boolean

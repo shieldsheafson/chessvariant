@@ -1,4 +1,4 @@
-package chessui.src.main.kotlin
+package chessnt.src.main.kotlin
 
 import kotlin.math.abs
 
@@ -12,7 +12,7 @@ class Game(initial: String = "3kb2/7/7/7/7/7/2BK3 w KQkq - 0 1") {
 
   val rules = mutableListOf<Rule>()
 
-  val board = Board(initial.split(" ")[0])
+  private val board = Board(initial.split(" ")[0])
 
   val attacks = mapOf(WHITE to mutableListOf<Int>(), BLACK to mutableListOf<Int>())
   val possibleMoves = mapOf(WHITE to mutableListOf<Int>(), BLACK to mutableListOf<Int>())
@@ -262,6 +262,10 @@ class Game(initial: String = "3kb2/7/7/7/7/7/2BK3 w KQkq - 0 1") {
 
     return pinnedPieces
   }
+
+  fun getPieceAt(i: Int) = board[i]
+
+  fun getKingLocation(color: Boolean) = board.getKingLocation(color)
 
   fun inCheck(color: Boolean): Boolean {
     if (color == WHITE) {

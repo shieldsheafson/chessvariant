@@ -1,21 +1,23 @@
-package chessui.src.main.kotlin
+package chessnt.src.main.kotlin
 
+import chessnt.src.main.java.SingleComponentAspectRatioKeeperLayout
 import org.apache.batik.anim.dom.SAXSVGDocumentFactory
 import org.apache.batik.anim.dom.SVGDOMImplementation
 import org.apache.batik.anim.dom.SVGOMDocument
 import org.apache.batik.swing.JSVGCanvas
 import org.apache.batik.util.XMLResourceDescriptor
+import java.awt.BorderLayout
 import java.awt.Color
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import java.io.IOException
 import javax.swing.JComponent
+import javax.swing.JPanel
 
 class ChessUI(val game: Game) : JComponent() {
   companion object {
-    private const val INITFRAMEWIDTH = 750
-    private const val FRAMETITLEBARHEIGHT = 28
-
     private val DARKSQUARECOLOR = Color(174, 138, 105)
     private val LIGHTSQUARECOLOR = Color(236, 218, 185)
     private val HIGHLIGHTCOLORONE = Color(102, 111, 69)
@@ -30,74 +32,166 @@ class ChessUI(val game: Game) : JComponent() {
     private val HIGHLIGHTCOLORTWOCIRCLE = object {}.javaClass.getResource("/$IMAGEDIR/circle2.svg").file.toString()
   }
 
-  private var frameWidth = INITFRAMEWIDTH / 2
-  private var frameHeight = (INITFRAMEWIDTH + FRAMETITLEBARHEIGHT) / 2
-  private var squareSize = (INITFRAMEWIDTH / SQUARESPERSIDE) / 2
-
-  private var currentBoardPos = game.board
-
   private var previouslySelected: Pair<Int, Int>? = null
-  private var previouslySelectedPossibleMoves = setOf<Int>()
-  private var selectedSquareNum: Int? = null
-  private var selectedSquarePossibleMoves = setOf<Int>()
+  private var currentlySelected: Int? = null
+  private var currentlySelectedPossibleMoves = setOf<Int>()
 
   private val squares = Array<JSVGCanvas>(SQUARESPERSIDE * SQUARESPERSIDE) { JSVGCanvas() }
 
   init {
+    this.setLayout(BorderLayout())
 
-    // click stuff
-    val getClicks = object : JComponent() {}
-    getClicks.setBounds(0, 0, squareSize * SQUARESPERSIDE, squareSize * SQUARESPERSIDE)
-    this.add(getClicks)
-    getClicks.addMouseListener(
-      object : MouseListener {
-        override fun mouseClicked(e: MouseEvent) {}
+    val boardPanel = JPanel()
+    boardPanel.setLayout(GridBagLayout())
 
-        override fun mouseEntered(e: MouseEvent) {}
+    // wrapper panel maintains a square aspect ratio
+    val wrapperPanel = JPanel(SingleComponentAspectRatioKeeperLayout())
+    wrapperPanel.add(boardPanel)
+    this.add(wrapperPanel)
 
-        override fun mouseExited(e: MouseEvent) {}
+    // both weigths are one cause every square should have an equal weight
+    // and if I don't give a weight the squares don't resize correctly
+    val constraints = GridBagConstraints()
+    constraints.weightx = 1.0
+    constraints.weighty = 1.0
+    constraints.fill = GridBagConstraints.BOTH
 
-        override fun mousePressed(e: MouseEvent) {}
+    for (i in squares.indices) {
+      val square = squares[i]
+      val piece = game.getPieceAt(i)
 
-        override fun mouseReleased(e: MouseEvent) {
-          val squareNum = e.getY() / squareSize * SQUARESPERSIDE + e.getX() / squareSize
+      val row = i / SQUARESPERSIDE
+      val col = i % SQUARESPERSIDE
 
-          if (squareNum > SQUARESPERSIDE * SQUARESPERSIDE - 1 || squareNum < 0) {
-            return
+      // place square in grid
+      constraints.gridx = col
+      constraints.gridy = row
+
+      // add piece image to square
+      if (piece.isEmpty) {
+        square.setURI(null)
+      } else {
+        square.setURI(
+          object {}.javaClass.getResource(
+            "/$IMAGEDIR/${fenToFileName(piece.fenChar)}",
+          ).file.toString(),
+        )
+      }
+
+      // color square background
+      if (squareIsWhite(i)) {
+        square.setBackground(LIGHTSQUARECOLOR)
+      } else {
+        square.setBackground(DARKSQUARECOLOR)
+      }
+
+      // click stuff
+      square.addMouseListener(
+        object : MouseListener {
+          override fun mouseClicked(e: MouseEvent) {}
+
+          override fun mouseEntered(e: MouseEvent) {}
+
+          override fun mouseExited(e: MouseEvent) {}
+
+          override fun mousePressed(e: MouseEvent) {}
+
+          override fun mouseReleased(e: MouseEvent) {
+            onClick(row, col)
           }
-          if (currentBoardPos == game.board && selectedSquareNum == squareNum) {
-            // purely so you can't spam click one square and cause the ui to glitch out
-            // the good solution would be to optimize updateChessUI
-            // but thats hard so I'll do it later
-            return
-          } else if (squareNum in selectedSquarePossibleMoves) {
-            game.movePiece(selectedSquareNum!!, squareNum)
-            previouslySelected = Pair(selectedSquareNum!!, squareNum)
-            previouslySelectedPossibleMoves = selectedSquarePossibleMoves
-            selectedSquareNum = null
-            selectedSquarePossibleMoves = setOf<Int>()
-          } else if (currentBoardPos[squareNum].color == game.currentPlayer) {
-            selectedSquareNum = squareNum
-            selectedSquarePossibleMoves = game.getPossibleMoves(squareNum)
-          } else {
-            selectedSquareNum = null
-            selectedSquarePossibleMoves = setOf<Int>()
-          }
+        },
+      )
 
-          updateChessUI()
-        }
-      },
-    )
+      boardPanel.add(square, constraints)
+    }
+  }
+
+  private fun onClick(row: Int, col: Int) {
+    val clicked = row * SQUARESPERSIDE + col
+
+    if (clicked in currentlySelectedPossibleMoves) {
+      // move piece
+      game.movePiece(currentlySelected!!, clicked)
+      previouslySelected = Pair(currentlySelected!!, clicked)
+      currentlySelected = null
+    } else if (game.getPieceAt(clicked).color == game.currentPlayer) {
+      // select piece
+      currentlySelected = clicked
+      currentlySelectedPossibleMoves = game.getPossibleMoves(clicked)
+    } else {
+      // deselect
+      currentlySelected = null
+      currentlySelectedPossibleMoves = setOf<Int>()
+    }
 
     updateChessUI()
   }
 
-  public fun adjustSize(newWidth: Int, newHeight: Int) {
-    frameWidth = Math.min(newWidth, newHeight)
-    frameHeight = frameWidth + FRAMETITLEBARHEIGHT
-    squareSize = frameWidth / SQUARESPERSIDE
-    setSize(frameWidth, frameHeight)
-    updateChessUI()
+  private fun updateChessUI() {
+    for (i in squares.indices) {
+      val square = squares[i]
+      val piece = game.getPieceAt(i)
+
+      // update image
+      if (piece.isEmpty) {
+        square.setURI(null)
+      } else {
+        square.setURI(
+          object {}.javaClass.getResource(
+            "/$IMAGEDIR/${fenToFileName(piece.fenChar)}",
+          ).file.toString(),
+        )
+      }
+
+      // color square background
+      if (squareIsWhite(i)) {
+        square.setBackground(LIGHTSQUARECOLOR)
+      } else {
+        square.setBackground(DARKSQUARECOLOR)
+      }
+    }
+
+    // highlight previously selected piece
+    if (previouslySelected != null) {
+      if (squareIsWhite(previouslySelected!!.first)) {
+        squares[previouslySelected!!.first].setBackground(HIGHLIGHTCOLORTHREE)
+      } else {
+        squares[previouslySelected!!.first].setBackground(HIGHLIGHTCOLORFOUR)
+      }
+      if (squareIsWhite(previouslySelected!!.second)) {
+        squares[previouslySelected!!.second].setBackground(HIGHLIGHTCOLORTHREE)
+      } else {
+        squares[previouslySelected!!.second].setBackground(HIGHLIGHTCOLORFOUR)
+      }
+    }
+
+    // highlights for selected piece
+    if (currentlySelected != null) {
+      // hightlight selected piece
+      if (squareIsWhite(currentlySelected!!)) {
+        squares[currentlySelected!!].setBackground(HIGHLIGHTCOLORTWO)
+      } else {
+        squares[currentlySelected!!].setBackground(HIGHLIGHTCOLORONE)
+      }
+
+      // highlight selected piece's possible moves
+      for (move in currentlySelectedPossibleMoves) {
+        if (game.getPieceAt(move).isEmpty) {
+          if (squareIsWhite(move)) {
+            squares[move].setURI(HIGHLIGHTCOLORTWOCIRCLE)
+          } else {
+            squares[move].setURI(HIGHLIGHTCOLORONECIRCLE)
+          }
+        } else {
+          highlightWithInverseCircle(move)
+        }
+      }
+    }
+
+    // highlight king if in check
+    if (game.inCheck(game.currentPlayer)) {
+      squares[game.getKingLocation(game.currentPlayer)].setBackground(RED)
+    }
   }
 
   private fun fenToFileName(fenChar: Char): String {
@@ -125,11 +219,11 @@ class ChessUI(val game: Game) : JComponent() {
   private fun highlightWithInverseCircle(squareNum: Int) {
     // some truly awful awful code, but I really just wanted it to work
     // I shall come back and clean it up eventually
-    val piece = currentBoardPos[squareNum]
+    val piece = game.getPieceAt(squareNum)
     if (piece.color == null) {
       throw IllegalArgumentException("Implement Later")
     }
-    if (!squareIsWhite(selectedSquareNum!!)) {
+    if (!squareIsWhite(currentlySelected!!)) {
       squares[squareNum].setBackground(DARKSQUARECOLOR)
     } else {
       squares[squareNum].setBackground(LIGHTSQUARECOLOR)
@@ -155,79 +249,5 @@ class ChessUI(val game: Game) : JComponent() {
     } catch (ex: IOException) {
       throw ex
     }
-  }
-
-  private fun updateChessUI() {
-    currentBoardPos = game.board
-
-    // did it with absolute positioning cause I am a silly little guy
-    // who couldn't figure out how to make layout mangers do what he wanted
-    for (i in 0 until SQUARESPERSIDE) {
-      for (j in 0 until SQUARESPERSIDE) {
-        val currentSquareNum = j * 7 + i
-        val square = squares[currentSquareNum]
-
-        // add piece image to GUI
-        if (currentBoardPos[currentSquareNum].color != null) {
-          square.setURI(
-            object {}.javaClass.getResource(
-              "/$IMAGEDIR/${fenToFileName(currentBoardPos[currentSquareNum].fenChar)}",
-            ).file.toString(),
-          )
-        } else {
-          square.setURI(null)
-        }
-
-        if (squareIsWhite(currentSquareNum)) square.setBackground(LIGHTSQUARECOLOR) else square.setBackground(DARKSQUARECOLOR)
-
-        square.setBounds(i * squareSize, j * squareSize, squareSize, squareSize)
-        this.add(square)
-      }
-    }
-
-    // highlights of previously selected piece
-    if (previouslySelected != null) {
-      if (!squareIsWhite(previouslySelected!!.first)) {
-        squares[previouslySelected!!.first].setBackground(HIGHLIGHTCOLORFOUR)
-      } else {
-        squares[previouslySelected!!.first].setBackground(HIGHLIGHTCOLORTHREE)
-      }
-      if (!squareIsWhite(previouslySelected!!.second)) {
-        squares[previouslySelected!!.second].setBackground(HIGHLIGHTCOLORFOUR)
-      } else {
-        squares[previouslySelected!!.second].setBackground(HIGHLIGHTCOLORTHREE)
-      }
-    }
-
-    // highlights of selected piece
-    if (selectedSquareNum != null) {
-      if (squareIsWhite(selectedSquareNum!!)) {
-        squares[selectedSquareNum!!].setBackground(HIGHLIGHTCOLORTWO)
-      } else {
-        squares[selectedSquareNum!!].setBackground(HIGHLIGHTCOLORONE)
-      }
-
-      val possibleMoves = selectedSquarePossibleMoves
-      for (move in possibleMoves) {
-        if (currentBoardPos[move].color == null) {
-          if (!squareIsWhite(move)) squares[move].setURI(HIGHLIGHTCOLORONECIRCLE) else squares[move].setURI(HIGHLIGHTCOLORTWOCIRCLE)
-        } else {
-          highlightWithInverseCircle(move)
-        }
-      }
-    }
-
-    if (game.inCheck(game.currentPlayer)) {
-      squares[game.board.getKingLocation(game.currentPlayer)].setBackground(RED)
-    }
-    // for (i in game.board.getPieceLocations()) {
-    //   squares[i].setBackground(Color(173, 192, 222))
-    // }
-    // for (i in game.attacks[BLACK]!!) {
-    //   squares[i].setBackground(Color(240, 146, 163))
-    // }
-    // for (i in game.getPinnedPieces(game.board.getKingLocation(WHITE))) {
-    //   squares[i].setBackground(Color(115, 6, 25))
-    // }
   }
 }

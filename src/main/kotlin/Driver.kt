@@ -1,4 +1,4 @@
-package chessui.src.main.kotlin
+package chessnt.src.main.kotlin
 
 fun main() {
   val game = Game()

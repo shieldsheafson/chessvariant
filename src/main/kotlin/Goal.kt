@@ -1,3 +1,3 @@
-package chessui.src.main.kotlin
+package chessnt.src.main.kotlin
 
 class Goal

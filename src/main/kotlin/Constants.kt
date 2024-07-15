@@ -1,4 +1,4 @@
-package chessui.src.main.kotlin
+package chessnt.src.main.kotlin
 
 const val SQUARESPERSIDE = 7
 const val TOTALSQUARES = SQUARESPERSIDE * SQUARESPERSIDE
